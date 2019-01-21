@@ -4,28 +4,16 @@ import sys
 import argparse
 import cv2
 import numpy as np
+import camera
 
 
 def parse_cli_args():
     parser = argparse.ArgumentParser()
-    # parser.add_argument("--video_device", dest="video_device",
-    #                     help="Video device # of USB webcam (/dev/video?) [0]",
-    #                     default=0, type=int)
+    parser.add_argument("--video_device", dest="video_device",
+                        help="Video device # of USB webcam (/dev/video?) [-1 for Jetson]",
+                        default=-1, type=int)
     arguments = parser.parse_args()
     return arguments
-
-# On versions of L4T previous to L4T 28.1, flip-method=2
-# Use the Jetson onboard camera
-
-
-def open_onboard_camera():
-    return cv2.VideoCapture("nvcamerasrc ! video/x-raw(memory:NVMM), width=(int)640, height=(int)480, format=(string)I420, framerate=(fraction)30/1 ! nvvidconv ! video/x-raw, format=(string)BGRx ! videoconvert ! video/x-raw, format=(string)BGR ! appsink")
-
-# Open an external usb camera /dev/videoX
-
-
-def open_camera_device(device_number):
-    return cv2.VideoCapture(device_number)
 
 
 def read_cam(video_capture):
@@ -120,10 +108,11 @@ if __name__ == '__main__':
     print(arguments)
     print("OpenCV version: {}".format(cv2.__version__))
     print("Device Number:", arguments.video_device)
-    if arguments.video_device == 0:
-        video_capture = open_onboard_camera()
+    if arguments.video_device == -1:
+        video_capture = camera.open_camera(device_number=None)
     else:
-        video_capture = open_camera_device(arguments.video_device)
+        video_capture = camera.open_camera(
+            device_number=arguments.video_device)
     read_cam(video_capture)
     video_capture.release()
     cv2.destroyAllWindows()
